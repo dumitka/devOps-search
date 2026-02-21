@@ -1,10 +1,4 @@
 services:
-  accommodation-service:
-    build: ../devOps-accommodation 
-    container_name: accommodation-service
-    ports:
-      - "8004:8000"
-
   search-service:
     build: .
     container_name: search-service
@@ -13,8 +7,6 @@ services:
       - .:/app
     ports:
       - "8003:8000"
-    depends_on:
-      - accommodation-service
     environment:
       ACCOMMODATION_URL: "http://accommodation-service:8000/api/accommodations/"
       PYTHONUNBUFFERED: 1
