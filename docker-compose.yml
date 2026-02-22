@@ -8,5 +8,7 @@ services:
     ports:
       - "8003:8000"
     environment:
+      SECRET_KEY: super-secret-accommodation-key
+      JWT_SIGNING_KEY: shared-jwt-secret
       ACCOMMODATION_URL: "http://accommodation-service:8000/api/accommodations/"
       PYTHONUNBUFFERED: 1
