@@ -7,6 +7,14 @@ services:
       - .:/app
     ports:
       - "8003:8000"
+    networks:
+      - devops-network
     environment:
-      ACCOMMODATION_URL: "http://accommodation-service:8000/api/accommodations/"
+      SECRET_KEY: super-secret-accommodation-key
+      JWT_SIGNING_KEY: shared-jwt-secret
+      ACCOMMODATION_URL: "http://accommodations-service:8000/api/accommodations/"
       PYTHONUNBUFFERED: 1
+
+networks:
+  devops-network:
+    driver: bridge
