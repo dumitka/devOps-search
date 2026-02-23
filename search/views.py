@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from datetime import datetime
 
-ACCOMMODATION_SERVICE_URL = "http://accommodation-service:8000/api/accommodations/"
+ACCOMMODATION_SERVICE_URL = "http://accommodations-service:8000/api/accommodations/"
 
 @api_view(['GET'])
 def search_accommodations(request):
@@ -18,8 +18,19 @@ def search_accommodations(request):
     amenity = request.GET.get("amenities")
 
     response = None
+    print(f"DEBUG: Gadjam URL -> {ACCOMMODATION_SERVICE_URL}")
     try:
-        response = requests.get(ACCOMMODATION_SERVICE_URL, timeout=5)
+        headers = {}
+
+        auth_header = request.headers.get("Authorization")
+        if auth_header:
+            headers["Authorization"] = auth_header
+
+        response = requests.get(
+            ACCOMMODATION_SERVICE_URL,
+            headers=headers,
+            timeout=5
+        )
         response.raise_for_status() # Ovo baca error ako servis nije dostupan
         data = response.json()
     except requests.exceptions.RequestException as e:
