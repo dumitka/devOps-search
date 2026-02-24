@@ -2,19 +2,19 @@ services:
   search-service:
     build: .
     container_name: search-service
+    env_file:
+      - .env
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:
       - "8003:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
-      - devops-network
-    environment:
-      SECRET_KEY: super-secret-accommodation-key
-      JWT_SIGNING_KEY: shared-jwt-secret
-      ACCOMMODATION_URL: "http://accommodations-service:8000/api/accommodations/"
-      PYTHONUNBUFFERED: 1
+      - devops
 
 networks:
-  devops-network:
+  devops:
+    name: devops-network
     driver: bridge
