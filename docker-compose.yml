@@ -4,7 +4,12 @@ services:
     container_name: search-service
     env_file:
       - .env
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: >
+      sh -c "
+      sh scripts/wait-for-service.sh accommodations-db 5432 &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
     volumes:
       - .:/app
     ports:
