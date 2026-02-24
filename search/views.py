@@ -2,8 +2,9 @@ import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from datetime import datetime
+import os
 
-ACCOMMODATION_SERVICE_URL = "http://accommodations-service:8000/api/accommodations/"
+ACCOMMODATION_SERVICE_URL = os.getenv("ACCOMMODATION_URL");
 
 @api_view(['GET'])
 def search_accommodations(request):
