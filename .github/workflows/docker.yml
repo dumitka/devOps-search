@@ -23,14 +23,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Build image
-        run: \
+        run: |
+          docker build \
           -t ghcr.io/${{ github.repository_owner }}/search-service:latest \
           -t ghcr.io/${{ github.repository_owner }}/search-service:${{ github.sha }} \
           .
 
       - name: Push image
         run: |
-          docker build \
           docker push ghcr.io/${{ github.repository_owner }}/search-service:latest
           docker push ghcr.io/${{ github.repository_owner }}/search-service:${{ github.sha }}
   
