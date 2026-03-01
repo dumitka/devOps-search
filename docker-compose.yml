@@ -18,3 +18,4 @@ services:
 networks:
   devops-network:
     driver: bridge
+    external: true
