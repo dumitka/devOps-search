@@ -9,79 +9,58 @@ ACCOMMODATION_SERVICE_URL = "http://accommodations-service:8000/api/accommodatio
 def search_accommodations(request):
     city = request.GET.get("city")
     guests = request.GET.get("guests")
-    min_price = request.GET.get("min_price")
-    max_price = request.GET.get("max_price")
-
-    sort_by = request.GET.get("sort_by")
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
-    amenity = request.GET.get("amenities")
 
-    response = None
-    print(f"DEBUG: Gadjam URL -> {ACCOMMODATION_SERVICE_URL}")
     try:
         headers = {}
-
         auth_header = request.headers.get("Authorization")
         if auth_header:
             headers["Authorization"] = auth_header
 
-        response = requests.get(
-            ACCOMMODATION_SERVICE_URL,
-            headers=headers,
-            timeout=5
-        )
-        response.raise_for_status() # Ovo baca error ako servis nije dostupan
+        response = requests.get(ACCOMMODATION_SERVICE_URL, headers=headers, timeout=5)
+        response.raise_for_status()
         data = response.json()
     except requests.exceptions.RequestException as e:
-        return Response({"error": f"Accommodation service unavailable: {str(e)}"}, status=503)
+        return Response({"error": f"Service unavailable: {str(e)}"}, status=503)
 
+    search_start = None
+    search_end = None
     if start_date and end_date:
         try:
-            start = datetime.strptime(start_date, "%Y-%m-%d")
-            end = datetime.strptime(end_date, "%Y-%m-%d")
-
-            if start >= end:
-                return Response(
-                    {"error": "end_date must be after start_date"},
-                    status=400
-                )
+            search_start = datetime.strptime(start_date, "%Y-%m-%d").date()
+            search_end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            if search_start >= search_end:
+                return Response({"error": "End date must be after start date"}, status=400)
         except ValueError:
-            return Response(
-                {"error": "Invalid date format. Use YYYY-MM-DD"},
-                status=400
-            )
+            return Response({"error": "Invalid date format"}, status=400)
 
     results = []
 
     for acc in data:
-        if city and city.lower() not in acc["location"]["city"].lower():
+        acc_city = acc.get("location", {}).get("city", "")
+        if city and city.lower() not in acc_city.lower():
             continue
-        if guests and int(acc["guests"]) < int(guests):
-            continue
-        if min_price and acc["price_per_night"] < int(min_price):
-            continue
-        if max_price and acc["price_per_night"] > int(max_price):
-            continue
+
+        if guests:
+            num_guests = int(guests)
+            if not (acc.get("min_guests", 0) <= num_guests <= acc.get("max_guests", 999)):
+                continue
+
+        if search_start and search_end:
+            is_available = False
+            for term in acc.get("availabilities", []):
+                term_start = datetime.strptime(term["from_date"], "%Y-%m-%d").date()
+                term_end = datetime.strptime(term["to_date"], "%Y-%m-%d").date()
+                
+                if term_start <= search_start and term_end >= search_end:
+                    is_available = True
+                    acc["current_price"] = term["price"]
+                    break
+            
+            if not is_available:
+                continue
 
         results.append(acc)
-
-    if amenity:
-        results = [
-            acc for acc in results
-            if amenity.lower() in [a.lower() for a in acc.get("amenities", [])]
-        ]
-    
-    if sort_by == "price":
-        results.sort(key=lambda x: x["price_per_night"])
-
-    elif sort_by == "-price":
-        results.sort(key=lambda x: x["price_per_night"], reverse=True)
-
-    elif sort_by == "guests":
-        results.sort(key=lambda x: x["guests"])
-
-    elif sort_by == "-guests":
-        results.sort(key=lambda x: x["guests"], reverse=True)
 
     return Response(results)
